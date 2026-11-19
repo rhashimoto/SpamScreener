@@ -293,7 +293,7 @@ fun PatternItemRow(
     Column(
       modifier = Modifier
         .fillMaxWidth()
-        .padding(12.dp)
+        .padding(2.dp)
     ) {
       Row(
         modifier = Modifier.fillMaxWidth(),
@@ -308,7 +308,7 @@ fun PatternItemRow(
             }
           },
           label = { Text("Pattern ${index + 1}") },
-          placeholder = { Text("e.g. ^\\+?1?800.*") },
+          placeholder = { Text("e.g. ^1?800.*") },
           modifier = Modifier.weight(1f),
           isError = !item.validationResult.isValid,
           visualTransformation = remember(item.validationResult) {

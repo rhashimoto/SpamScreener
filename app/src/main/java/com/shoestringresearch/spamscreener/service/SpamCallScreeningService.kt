@@ -106,11 +106,12 @@ class SpamCallScreeningService : CallScreeningService() {
   }
 
   private fun matchesScreeningPatterns(phoneNumber: String, patterns: List<String>): Boolean {
+    val digitsOnly = phoneNumber.filter { it.isDigit() }
     for (patternString in patterns) {
       if (patternString.isBlank()) continue
       try {
         val pattern = Pattern.compile(patternString)
-        if (pattern.matcher(phoneNumber).find() || pattern.matcher(phoneNumber).matches()) {
+        if (pattern.matcher(digitsOnly).find() || pattern.matcher(digitsOnly).matches()) {
           return true
         }
       } catch (e: PatternSyntaxException) {
