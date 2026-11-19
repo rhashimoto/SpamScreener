@@ -32,7 +32,11 @@ object ScreeningNotificationHelper {
   }
 
   @SuppressLint("NotificationPermission")
-  fun postScreenedCallNotification(context: Context, rawNumber: String) {
+  fun postScreenedCallNotification(
+    context: Context,
+    rawNumber: String,
+    callerDisplayName: String? = null
+  ) {
     ensureNotificationChannel(context)
 
     if (ContextCompat.checkSelfPermission(
@@ -44,7 +48,11 @@ object ScreeningNotificationHelper {
     }
 
     val formattedNumber = PhoneNumberHelper.formatForDisplay(rawNumber)
-    val title = "Screened $formattedNumber"
+    val title = if (!callerDisplayName.isNullOrBlank()) {
+      "Screened $formattedNumber ($callerDisplayName)"
+    } else {
+      "Screened $formattedNumber"
+    }
 
     // Intent to open phone dialer with that number
     val dialIntent = Intent(Intent.ACTION_DIAL).apply {

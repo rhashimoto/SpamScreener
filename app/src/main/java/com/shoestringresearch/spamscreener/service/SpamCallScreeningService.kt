@@ -66,9 +66,10 @@ class SpamCallScreeningService : CallScreeningService() {
         // send the call to voicemail, post a notification "Screened ###-###-####"
         // with a tap action that opens the phone dialer with that number, and stop further processing.
         if (matchesScreeningPatterns(rawNumber, settings.screeningPatterns)) {
-          Log.d(TAG, "Call from $rawNumber matches screening pattern. Sending to voicemail.")
+          val callerDisplayName = callDetails.callerDisplayName
+          Log.d(TAG, "Call from $rawNumber ($callerDisplayName) matches screening pattern. Sending to voicemail.")
           respondVoicemail(callDetails)
-          postNotificationSafely(rawNumber)
+          postNotificationSafely(rawNumber, callerDisplayName)
           return@launch
         }
 
@@ -143,9 +144,13 @@ class SpamCallScreeningService : CallScreeningService() {
     respondToCall(callDetails, response)
   }
 
-  private fun postNotificationSafely(phoneNumber: String) {
+  private fun postNotificationSafely(phoneNumber: String, callerDisplayName: String? = null) {
     try {
-      ScreeningNotificationHelper.postScreenedCallNotification(applicationContext, phoneNumber)
+      ScreeningNotificationHelper.postScreenedCallNotification(
+        applicationContext,
+        phoneNumber,
+        callerDisplayName
+      )
     } catch (e: Exception) {
       Log.e(TAG, "Failed to post notification", e)
     }
