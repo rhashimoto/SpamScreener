@@ -3,6 +3,7 @@ package com.shoestringresearch.spamscreener.service
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
+import android.os.Build
 import android.provider.ContactsContract
 import android.telecom.Call
 import android.telecom.CallScreeningService
@@ -67,7 +68,7 @@ class SpamCallScreeningService : CallScreeningService() {
         // with a tap action that opens the phone dialer with that number, and stop further processing.
         if (matchesScreeningPatterns(rawNumber, settings.screeningPatterns)) {
           val callerDisplayName = callDetails.callerDisplayName
-          Log.d(TAG, "Call from $rawNumber ($callerDisplayName) matches screening pattern. Sending to voicemail.")
+          Log.d(TAG, "Call from $rawNumber ($callerDisplayName) matches screening pattern.")
           respondVoicemail(callDetails)
           postNotificationSafely(rawNumber, callerDisplayName)
           return@launch
@@ -135,12 +136,23 @@ class SpamCallScreeningService : CallScreeningService() {
   }
 
   private fun respondVoicemail(callDetails: Call.Details) {
-    val response = CallResponse.Builder()
-      .setDisallowCall(true)
-      .setRejectCall(true)
-      .setSkipNotification(false)
-      .setSkipCallLog(false)
-      .build()
+    val response = if (Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.CINNAMON_BUN_2) {
+      Log.d(TAG, "Rejecting call as missed.")
+      CallResponse.Builder()
+        .setDisallowCall(true)
+        .setRejectedAsMissed(true)
+        .setSkipNotification(false)
+        .setSkipCallLog(false)
+        .build()
+    } else {
+      Log.d(TAG, "Rejecting call.")
+      CallResponse.Builder()
+        .setDisallowCall(true)
+        .setRejectCall(true)
+        .setSkipNotification(false)
+        .setSkipCallLog(false)
+        .build()
+    }
     respondToCall(callDetails, response)
   }
 
