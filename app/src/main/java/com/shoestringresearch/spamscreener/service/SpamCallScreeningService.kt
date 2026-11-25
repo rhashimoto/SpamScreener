@@ -3,7 +3,6 @@ package com.shoestringresearch.spamscreener.service
 import android.Manifest
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.provider.ContactsContract
 import android.telecom.Call
 import android.telecom.CallScreeningService
@@ -54,11 +53,12 @@ class SpamCallScreeningService : CallScreeningService() {
           respondAllow(callDetails)
           return@launch
         }
+        Log.d(TAG, "Incoming call from $rawNumber")
 
         // Rule 1: If the ANI matches any number in the user's contacts,
         // do not screen the call, and stop further processing.
         if (isNumberInContacts(rawNumber)) {
-          Log.d(TAG, "Call from $rawNumber matches contacts. Allowing.")
+          Log.d(TAG, "Call matches contacts. Allowing.")
           respondAllow(callDetails)
           return@launch
         }
@@ -68,14 +68,14 @@ class SpamCallScreeningService : CallScreeningService() {
         // with a tap action that opens the phone dialer with that number, and stop further processing.
         if (matchesScreeningPatterns(rawNumber, settings.screeningPatterns)) {
           val callerDisplayName = callDetails.callerDisplayName
-          Log.d(TAG, "Call from $rawNumber ($callerDisplayName) matches screening pattern.")
+          Log.d(TAG, "Call matches screening pattern.")
           respondVoicemail(callDetails)
           postNotificationSafely(rawNumber, callerDisplayName)
           return@launch
         }
 
         // Rule 3: Do not screen the call and stop further processing.
-        Log.d(TAG, "Call from $rawNumber did not match any patterns. Allowing.")
+        Log.d(TAG, "Call did not match any patterns. Allowing.")
         respondAllow(callDetails)
       } catch (e: Exception) {
         Log.e(TAG, "Error screening call, defaulting to allow", e)
@@ -136,23 +136,12 @@ class SpamCallScreeningService : CallScreeningService() {
   }
 
   private fun respondVoicemail(callDetails: Call.Details) {
-    val response = if (Build.VERSION.SDK_INT_FULL >= Build.VERSION_CODES_FULL.CINNAMON_BUN_2) {
-      Log.d(TAG, "Rejecting call as missed.")
-      CallResponse.Builder()
-        .setDisallowCall(true)
-        .setRejectedAsMissed(true)
-        .setSkipNotification(false)
-        .setSkipCallLog(false)
-        .build()
-    } else {
-      Log.d(TAG, "Rejecting call.")
-      CallResponse.Builder()
-        .setDisallowCall(true)
-        .setRejectCall(true)
-        .setSkipNotification(false)
-        .setSkipCallLog(false)
-        .build()
-    }
+    val response = CallResponse.Builder()
+      .setDisallowCall(true)
+      .setRejectCall(false)
+      .setSkipNotification(true)
+      .setSkipCallLog(false)
+      .build()
     respondToCall(callDetails, response)
   }
 
